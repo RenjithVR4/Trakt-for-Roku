@@ -18,4 +18,4 @@
 APPNAME = simpleposter
 VERSION = 1.0
 
-include ../app.mk
+include app.mk
