@@ -1,0 +1,7 @@
+Trakt Appication for Roku Streaming Players
+
+The first version of this application will serve as a hub for Trakt.tv users, allowing access to their Calendar, Recommendations, T.V. and Movie watchlists, and tending shows and movies.  Initially the app will simple serve as a Trakt.tv browser designed for the Roku.  As Roku, Inc. adds functionality, this app may be used to scrobble watched media on the Roku in the background and update Trakt accordingly.
+
+For more information on the development of this app, or to propose features, contact me on github or via email at greenpizza13@gmail.com.
+
+The development of this application is open source, but please be respectful with changes during this initial development phase.  
