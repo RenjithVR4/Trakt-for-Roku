@@ -8,31 +8,10 @@
 '** Application startup
 '************************************************************
 Sub Main()
-
-    'initialize theme attributes like titles, logos and overhang color
-    initTheme()
-
-    'prepare the screen for display and get ready to begin
-   screen=preShowPosterScreen("", "")
-    if screen=invalid then
-        print "unexpected error in preShowPosterScreen"
-        return
-    end if
-
-	'createHomeScreen()
-    'set to go, time to get started
-    showPosterScreen(screen)
-
+	init()
 End Sub
 
-Sub createHomeScreen()
-	port = CreateObject("roMessagePort")
-	poster = createObject("roPosterScreen")
-	poster.setTitle("Trakt.tv")
-	poster.SetBreadcrumbEnable(false)
-	poster.SetListStyle("flat-category")
 
-End Sub
 '*************************************************************
 '** Set the configurable theme attributes for the application
 '** 
@@ -55,7 +34,20 @@ Sub initTheme()
     theme.OverhangOffsetHD_Y = "5"
     theme.OverhangSliceHD = "pkg:/images/overhang_slice_hd.png"
     theme.OverhangLogoHD  = "pkg:/images/logo_overhang_hd.png"
-
+	theme.BackgroundColor = "#EEEEEE"
+	
+	theme.girdscreenOverhangSlideSD = "pkg:/images/overhang_slice_sd.png"
+	theme.gridscreenOverhangSliceHD = "pkg:/images/overhang_slice_hd.png"
+	theme.gridScreenLogoSD = "pkg:/images/logo_overhang_sd.png"
+	theme.gridscreenLogoHD = "pkg:/images/logo_overhang_hd.png"
+	theme.GridScreenLogoOffsetSD_X = "72"
+    theme.GridScreenLogoOffsetSD_Y = "25"
+	theme.GridScreenLogoOffsetHD_X = "50"
+    theme.GridScreenLogoOffsetHD_Y = "5"
+	theme.gridscreenBackgroundColor = "#EEEEEE"
+	theme.gridScreenRetrievingColor = "#008FBB"
+	theme.gridScreenListNameColor = "#008FBB"
+	theme.gridScreenOverhangHeightHD = "125"
     app.SetTheme(theme)
 
 End Sub
@@ -87,31 +79,60 @@ End Function
 '******************************************************
 
 Function showPosterScreen(screen As Object) As Integer
-	
+	registry = createObject("roRegistrySection", "account")
+	breadcrumbUser = "Not Logged In"
+	if registry.exists("fullname") then
+		breadcrumbUser = registry.read("fullname")
+	endif
 	screen.SetTitle("trakt")
     screen.SetContentList(getMainScreenCategories())
+    screen.SetBreadcrumbText("trakt.tv", breadcrumbUser)
     screen.Show()
-
+	dlg = CreateObject("roMessageDialog")
+	dlg.setTitle("Updating")
+	dlg.setText("Updating local information, please wait. (Updates run in background after this point to reduce loading times.)")
+	dlg.showBusyAnimation()
+	dlg.show()
+	aSyncGetCalendar("premieres")
+	'aSyncGetTVRecommendations()
+	'aSyncGetMovieRecommendations()
+	'aSyncGetFriends()
+	'aSyncGetTrendingMovies()
+	 'aSyncGetTrendingShows()
+	dlg.close()
+	print mod(7, 22)
+	
     while true
-        msg = wait(0, screen.GetMessagePort())
-        if type(msg) = "roPosterScreenEvent" then
-            print "showPosterScreen | msg = "; msg.GetMessage() " | index = "; msg.GetIndex()
-            if msg.isListFocused() then
-                'get the list of shows for the currently selected item
-                screen.SetContentList(getShowsForCategoryItem(categoryList[msg.GetIndex()]))
-                print "list focused | current category = "; msg.GetIndex()
-            else if msg.isListItemFocused() then
-                print"list item focused | current show = "; msg.GetIndex()
-            else if msg.isListItemSelected() then
-                print "list item selected | current show = "; msg.GetIndex() 
-                'if you had a list of shows, the index of the current item 
-                'is probably the right show, so you'd do something like this
-                'm.curShow = displayShowDetailScreen(showList[msg.GetIndex()])
-                displayBase64()
-            else if msg.isScreenClosed() then
-                return -1
-            end if
-        end If
+        msg = wait(0, screen.getmessageport())
+        idx = msg.getIndex()
+        if msg.isListItemSelected() then
+        	if idx = 0 then
+        		runCalendar()
+        	
+        	else if idx = 1 then
+        		runTVRecommendations()
+        	
+        	else if idx = 2 then 
+        		runMovieRecommendations()
+        	
+        	else if idx = 3 then
+        		runTrending()
+        	
+        	else if idx = 4 then
+        		runFriends()
+        	
+        	else if idx = 5 then
+        		runAccount()
+        		print "Updating breadcrumbs"
+        		breadcrumbUser = "Not Logged In"
+				if registry.exists("fullname") then
+					breadcrumbUser = registry.read("fullname")
+				endif
+				print "New user: " + breadcrumbUser
+			    screen.SetBreadcrumbText("trakt.tv", breadcrumbUser)
+
+        	endif
+        endif
     end while
 
 
@@ -156,6 +177,7 @@ Function getMainScreenCategories() As Object
 	end for
 	categories[0].ShortDescriptionLine1 = "Calendar"
 	categories[0].ShortDescriptionLine2 = "View upcoming T.V. shows and movies"
+	categories[0].hdposterurl = "pkg:/images/screens/home/calendar_hd.png"
 	categories[1].ShortDescriptionLine1 = "T.V. Recommendations"
 	categories[1].ShortDescriptionLine2 = "Recommendations based on your favorite shows"
 	categories[2].ShortDescriptionLine1 = "Movie Recommendations"
@@ -167,23 +189,4 @@ Function getMainScreenCategories() As Object
 	categories[5].ShortDescriptionLine1 = "Account"
 	categories[5].ShortDescriptionLine2 = "Trakt.tv syncing and account link"
 	return categories
-end function
-
-Function accountSettings() as Integer
-	port = CreateObject("roMessagePort")
-	accountScreen = CreateObject("roSpringboardScreen")
-	accountScreen.setDescriptionStyle("generic")
-	accountScreen.addButton(0, "Link Trakt Account")
-	accountScreen.addButton(1, "Set up Trakt Syncing")
-	accountScreen.addButton(2, "Manage Trending Stream")
-	accountScreen.addButton(3, "Calendar Settings")
-	accountScreen.setBreadCrumbText("trakt.tv", "Account Settings")
-	accountScreen.SetMessagePort(port)
-	accountScreen.show()
-	
-	while true
-	msg = wait(0, port)
-		if msg.isScreenClosed() then
-			return -1
-	end while
 end function
