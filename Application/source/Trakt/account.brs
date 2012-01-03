@@ -263,6 +263,17 @@ function linkAccount() as Integer
 			registry.write("fullname", accountInfo.full_name)
 		endif
 		registry.write("calendar_days", "03")
+		
+		'Set up auto-loading:
+		autoLoad = createObject("roAssociativeArray")
+		autoLoad.calendar = true
+		autoLoad.tv = false
+		autoLoad.movies = false
+		autoLoad.friends = false
+		autoLoad.trending = false
+		registry.write("autoLoad", SimpleJSONBuilder(autoLoad))
+		
+		
 		registry.flush()
 		dlg = CreateObject("roMessageDialog")
 		dlg.setTitle("Sucess!")
@@ -281,4 +292,167 @@ function linkAccount() as Integer
 		end while
 
 	endif
+end function
+
+function syncSetup(trace = false) as void
+	reg = createObject("roRegistrySection", "account")
+	autoLoad = SimpleJSONParser(reg.read("autoLoad"))
+	if trace then print "Trace: autoLoad: " + autoload
+	syncScreen = CreateObject("roParagraphScreen")
+	syncScreen.setTitle("Trakt Sync Setup")
+	dfm = 0
+	syncScreen.addParagraph("Choose which items will load when the Trakt app starts up.  If you turn an item off, it will only load when that menu item is chosen from the main menu.")
+	goto create
+reset:
+	syncScreen.close()
+	syncScreen = CreateObject("roParagraphScreen")
+	syncScreen.setTitle("Trakt Sync Setup")
+	syncScreen.addParagraph("Choose which items will load when the Trakt app starts up.  If you turn an item off, it will only load when that menu item is chosen from the main menu.")
+create:
+	if autoLoad.calendar then 
+		syncScreen.addButton(0, "Calendar [ON]")
+	else
+		syncScreen.addButton(0, "Calendar [OFF]") 
+ 	endif
+	if autoLoad.tv then 
+		syncScreen.addButton(1, "T.V. Recommendations [ON]")
+	else
+		syncScreen.addButton(1, "T.V. Recommendations [OFF]")
+ 	endif
+	if autoLoad.movies then 
+		syncScreen.addButton(2, "Movie Recommendations [ON]")
+	else
+		syncScreen.addButton(2, "Movie Recommendations [OFF]")
+ 	endif
+	if autoLoad.friends then 
+		syncScreen.addButton(3, "Friends [ON]")
+	else
+		syncScreen.addButton(3, "Friends [OFF]")
+ 	endif
+	if autoLoad.trending then 
+		syncScreen.addButton(4, "Trending [ON]")
+	else
+		syncScreen.addButton(4, "Trending [OFF]")
+ 	endif
+	syncScreen.setDefaultMenuItem(dfm)
+	syncScreen.addButton(5, "Save")
+	syncScreen.setMessagePort(createObject("roMessagePort"))
+	syncScreen.show()
+	
+	while true
+		msg = wait(0, syncScreen.getMessagePort())
+		if msg.isButtonPressed() then
+			idx = msg.getIndex()
+			if idx = 0 then
+				if autoLoad.calendar then 
+					if trace then print "Calendar set to OFF"
+					autoLoad.calendar = false
+					goto reset
+				else
+					if trace then print "Calendar set to ON"
+					autoLoad.calendar = true
+					goto reset
+				endif
+			else if idx = 1 then 
+				dfm = 1
+				if autoLoad.tv then 
+					if trace then print "tv set to OFF"
+					autoLoad.tv = false
+					
+					goto reset
+				else
+					if trace then print "tv set to ON"
+					autoLoad.tv = true
+					goto reset
+				endif
+			else if idx = 2 then 
+				dfm = 2
+				if autoLoad.movies then 
+					if trace then print "movies set to OFF"
+					autoLoad.movies = false
+					goto reset
+				else
+					if trace then print "movies set to ON"
+					autoLoad.movies = true
+					goto reset
+				endif
+			else if idx = 3 then
+			 	dfm = 3
+				if autoLoad.friends then 
+					if trace then print "friends set to OFF"
+					autoLoad.friends = false
+					goto reset
+				else
+					if trace then print "friends set to ON"
+					autoLoad.friends = true
+					goto reset
+				endif
+			else if idx = 4 then 
+				dfm = 4
+				if autoLoad.trending then 
+					if trace then print "trending set to OFF"
+					autoLoad.trending = false
+					goto reset
+				else
+					if trace then print "trending set to ON"
+					autoLoad.trending = true
+					goto reset
+				endif
+			else
+				reg.write("autoLoad", SimpleJSONBuilder(autoLoad))
+				reg.flush()
+				syncScreen.close()
+				return 
+			endif
+		end if
+	end while
+end function
+
+function calendarSetup(trace = false) as boolean
+	calScreen = createObject("roParagraphScreen")
+	registry = createObject("roRegistrySection", "account")
+	days = registry.read("calendar_days")
+	
+	calScreen.setTitle("Calendar Settings")
+	calScreen.addHeaderText("Days to view")
+	calScreen.addParagraph("Select how far into the future you would like to see shows in your watchlist premieres.")
+	calScreen.addButton(0, "Three days")
+	calScreen.addButton(1, "Five days")
+	calScreen.addButton(2, "One week")
+	calScreen.addButton(3, "Two weeks")
+	calScreen.addButton(4, "One month")
+	calScreen.setMessagePort(createObject("roMessagePort"))
+	calScreen.show()
+	
+	while true
+		msg = wait(0, calScreen.getMessagePort())
+		if msg.isButtonPressed() then
+			idx = msg.getIndex()
+			if idx = 0 then
+				days = "03"
+				exit while
+			else if idx = 1 then
+				days = "05"
+				exit while
+				
+			else if idx = 2 then
+				days = "07"
+				exit while
+			
+			else if idx = 3 then
+				days = "14"
+				exit while
+			
+			else if idx = 4 then
+				days = "30"
+				exit while
+	
+			endif
+		endif
+	end while
+	
+	registry.write("calendar_days", days)
+	registry.flush()
+	calScreen.close()
+	return true
 end function

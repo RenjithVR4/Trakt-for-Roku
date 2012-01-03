@@ -1,17 +1,53 @@
 
 function runCalendar() as Integer
 	print "Running calendar screen."
-	dlg = CreateObject("roMessagedialog")
-	dlg.setTitle("Parsing show data")
-	dlg.setText("Please wait.")
-	dlg.showBusyAnimation()
-	dlg.show()
+	
 	print listDir("tmp:/")
 	
-	premieres = ReadASCIIFile("tmp:/cal_premieres.txt")
 	
-		
+	
+	premieres = ReadASCIIFile("tmp:/calendar.txt")
 
+	
+	if premieres = "failed" then goto reload
+	if type(premieres) = invalid then goto reload
+	if premieres = "" then goto reload
+	
+	goto display
+	
+reload:
+	dlg = createObject("roMessageDialog")
+	dlg.setTitle("Loading Content")
+	dlg.setText("Startup loading can be customized in the account menu to speed up your experience.")
+	dlg.showBusyAnimation()
+	dlg.show()
+	apiKey = getAPIKey()
+	registry = createObject("roRegistrySection", "account")
+	premieres = aSyncFetch("http://api.trakt.tv/user/calendar/shows.json/" + apiKey + "/" + registry.read("username") + "/20120102/" + registry.read("calendar_days"), true)
+	dlg.close()
+	if premieres = "failed" then 
+		dlg = createObject("roMessageDialog")
+		dlg.setTitle("Could not load calendar data")
+		dlg.setText("Please try again.  If the problem persists, try unlinking and re-linking your account.")
+		dlg.addButton(0, "Ok :(")
+		dlg.setMessagePort(createObject("roMessagePort"))
+		dlg.show()
+		while true
+			msg = wait(0, dlg.getMessagePort)
+			if msg.isButtonPressed then 
+				dlg.close()
+				return -1
+			endif
+		end while
+	end if
+	
+	WriteASCIIFile("tmp:/calendar.txt", premieres)
+display:
+	dlg = CreateObject("roOneLineDialog")
+	dlg.setTitle("Parsing show data")
+	dlg.showBusyAnimation()
+	dlg.show()
+	
 	premieresArray = rdJSONParser(premieres)
 	dates = CreateObject("roArray", 0, true)
 	dateLabels = CreateObject("roArray", 0, true)
@@ -72,7 +108,9 @@ function runCalendar() as Integer
 			elseif msg.isListItemFocused()
 				'print "Focused: " + msg.getContent()
 			elseif msg.isListItemSelected()
-				print "Selected: "  + msg.getMessage()
+				selectedRow = dates[msg.getIndex()]
+				selectedCol = selectedRow[msg.getData()]
+				print "Selected: "  + selectedCol
 			endif
 		endif
 	end while

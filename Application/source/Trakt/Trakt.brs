@@ -84,24 +84,33 @@ Function showPosterScreen(screen As Object) As Integer
 	if registry.exists("fullname") then
 		breadcrumbUser = registry.read("fullname")
 	endif
+	username = registry.read("username")
 	screen.SetTitle("trakt")
     screen.SetContentList(getMainScreenCategories())
     screen.SetBreadcrumbText("trakt.tv", breadcrumbUser)
     screen.Show()
-	dlg = CreateObject("roMessageDialog")
-	dlg.setTitle("Updating")
-	dlg.setText("Updating local information, please wait. (Updates run in background after this point to reduce loading times.)")
+	
+	dlg = createObject("roMessageDialog")
+	dlg.setTitle("Loading Content")
+	dlg.setText("Startup loading can be customized in the account menu to speed up your experience.")
 	dlg.showBusyAnimation()
 	dlg.show()
-	aSyncGetCalendar("premieres")
-	'aSyncGetTVRecommendations()
-	'aSyncGetMovieRecommendations()
-	'aSyncGetFriends()
-	'aSyncGetTrendingMovies()
-	 'aSyncGetTrendingShows()
-	dlg.close()
-	print mod(7, 22)
+	apiKey = getAPIKey()
+	autoLoad = SimpleJSONParser(registry.read("autoLoad"))
 	
+'	*** Load data and save into text files based on account autoload settings ***
+
+	if autoLoad.calendar then WriteASCIIFile("tmp:/calendar.txt", aSyncFetch("http://api.trakt.tv/user/calendar/shows.json/" + apiKey + "/" + username + "/20120102/" + registry.read("calendar_days"), true))
+	
+	if autoLoad.tv then WriteASCIIFile("tmp:/tv.txt", aSyncFetch("http://api.trakt.tv/recommendations/shows/" + apiKey, true))
+	
+	if autoLoad.movies then WriteASCIIFile("tmp:/movies.txt", aSyncFetch("http://api.trakt.tv/recommendations/movies/" + apiKey))
+	
+	if autoLoad.friends then WriteASCIIFile("tmp:/friends.txt", aSyncFetch("http://api.trakt.tv/user/friends.json/" + apiKey + "/" + username + "/extended"))
+	
+	if autoLoad.trending then WriteASCIIFIle("tmp:/trending.txt", aSyncFetch("http://api.trakt.tv/activity/community.json/" + apiKey + "/movie,show/watching,scrobble,checkin/20120102", true))
+	
+	dlg.close()
     while true
         msg = wait(0, screen.getmessageport())
         idx = msg.getIndex()
