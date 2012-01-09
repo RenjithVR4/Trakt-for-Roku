@@ -1,0 +1,93 @@
+screen = [{
+	backgroundBanner : [{
+		url:m.fanart
+		TargetRect:{x:0,y:0,w:w,h:h}
+		}]
+	main : {
+		canvas : createObject("roImageCanvas")
+		open : true
+		transparentOverlay : [{
+			TargetRect:{x:0,y:270,w:1280,h:450}
+			url:"pkg:/images/HD_Transparent_Show_BG.png"
+		}]
+		screenElements = [
+			{
+			TargetRect:{x:90,y:495,h:90,w:540}
+			Text:m.show
+			TextAttrs:{Color:"#FFFFFF", Font:fonts.get("droidsans-bold", 36, 5, false), HAlign:"Left", Valign:"Bottom", Direction:"LeftToRight"}
+			}
+			{
+			TargetRect:{x:90,y:585,h:45,w:360}
+			Text:m.episodeTitle + " » " + m.season.toStr() + "x" + m.episodeNumber.toStr()
+			TextAttrs:{Color:"#FFFFFF", Font:fonts.get("droidsans", 24, 1, false), HAlign:"Left", Valign:"Left", Direction:"LeftToRight"}
+			}
+			{
+			TargetRect:{x:90,y:610,h:45,w:360}
+			Text:m.date
+			TextAttrs:{Color:"#FFFFFF", Font:fonts.get("droidsans", 20, 1, false), HAlign:"Left", Valign:"Left", Direction:"LeftToRight"}
+			}
+			{
+			TargetRect:{x:720, y:360, w:450, h:270}
+			Text:m.description
+			TextAttrs:{Color:"#FFFFFF", Font:fonts.get("droidsans", 21, 1, false), HAlign:"Left", Valign:"Left", Direction:"LeftToRight"}
+			}
+			{
+			TargetRect:{x:720, y:630, w:450, h:90}
+			Text:m.airDay + "s at " + m.airTime + " on " + m.network + "  •  " + m.certification
+			TextAttrs:{Color:"#FFFFFF", Font:fonts.get("droidsans", 18, 1, true), HAlign:"Left", Valign:"Left", Direction:"LeftToRight"}
+			}
+		]
+	}
+	up = {
+		canvas = createObject("roImageCanvas")
+		open = false
+		transparentOverlay = [{
+			TargetRect:{x:0,y:0,w:1280,h:450}
+			url:"pkg:/images/HD_Transparent_Show_BG.png"
+		}]
+		screenElements = [
+			{
+			TargetRect:{x:90,y:225,h:90,w:540}
+			Text:m.show
+			TextAttrs:{Color:"#FFFFFF", Font:fonts.get("droidsans-bold", 36, 5, false), HAlign:"Left", Valign:"Bottom", Direction:"LeftToRight"}
+			}
+			{
+			TargetRect:{x:90,y:315,h:45,w:360}
+			Text:m.episodeTitle + " » " + m.season.toStr() + "x" + m.episodeNumber.toStr()
+			TextAttrs:{Color:"#FFFFFF", Font:fonts.get("droidsans", 24, 1, false), HAlign:"Left", Valign:"Left", Direction:"LeftToRight"}
+			}
+			{
+			TargetRect:{x:90,y:340,h:45,w:360}
+			Text:m.date
+			TextAttrs:{Color:"#FFFFFF", Font:fonts.get("droidsans", 20, 1, false), HAlign:"Left", Valign:"Left", Direction:"LeftToRight"}
+			}
+			{
+			TargetRect:{x:720, y:90, w:450, h:270}
+			Text:m.description
+			TextAttrs:{Color:"#FFFFFF", Font:fonts.get("droidsans", 21, 1, false), HAlign:"Left", Valign:"Left", Direction:"LeftToRight"}
+			}
+			{
+			TargetRect:{x:720, y:360, w:450, h:90}
+			Text:m.airDay + "s at " + m.airTime + " on " + m.network + "  •  " + m.certification
+			TextAttrs:{Color:"#FFFFFF", Font:fonts.get("droidsans", 18, 1, true), HAlign:"Left", Valign:"Left", Direction:"LeftToRight"}
+			}
+
+		]
+	}
+	down = {
+		canvas = createObject("roImageCanvas")
+		open = false
+		transparentOverlay = [{
+			TargetRect:{x:0,y:270,w:1280,h:450}
+			url:"pkg:/images/HD_Transparent_Show_BG.png"
+		}]
+	}
+	center = {
+		canvas = createObject("roImageCanvas")
+		open = false
+		transparentOverlay = [{
+			TargetRect:{x:0,y:270,w:1280,h:450}
+			url:"pkg:/images/HD_Transparent_Show_BG.png"
+		}]
+	}
+}]

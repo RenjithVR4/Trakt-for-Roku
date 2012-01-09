@@ -1,9 +1,8 @@
-title=Trakt
-subtitle=The Trakt community right on your roku!
+title=Trakt For Roku
+major_version=1
+minor_version=0
+build_version=0
 mm_icon_focus_hd=pkg:/images/HD_Focused.png
 mm_icon_side_hd=pkg:/images/HD_Unfocused.png
 mm_icon_focus_sd=pkg:/images/SD_Focused.png
 mm_icon_side_sd=pkg:/images/SD_Unfocused.png
-major_version=0
-minor_version=1
-build_version=00000

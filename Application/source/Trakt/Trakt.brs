@@ -48,6 +48,8 @@ Sub initTheme()
 	theme.gridScreenRetrievingColor = "#008FBB"
 	theme.gridScreenListNameColor = "#008FBB"
 	theme.gridScreenOverhangHeightHD = "125"
+	
+	
     app.SetTheme(theme)
 
 End Sub
@@ -79,38 +81,36 @@ End Function
 '******************************************************
 
 Function showPosterScreen(screen As Object) As Integer
-	registry = createObject("roRegistrySection", "account")
+	registry = getRegistry("account")
+	checkAccountLink()
+	
 	breadcrumbUser = "Not Logged In"
 	if registry.exists("fullname") then
 		breadcrumbUser = registry.read("fullname")
 	endif
+	
 	username = registry.read("username")
 	screen.SetTitle("trakt")
     screen.SetContentList(getMainScreenCategories())
     screen.SetBreadcrumbText("trakt.tv", breadcrumbUser)
-    screen.Show()
 	
-	dlg = createObject("roMessageDialog")
-	dlg.setTitle("Loading Content")
-	dlg.setText("Startup loading can be customized in the account menu to speed up your experience.")
-	dlg.showBusyAnimation()
+    screen.Show()
+
+	
+	dlg = createSimpleLoadingScreen("Loading Content", "Startup loading can be customized in the account menu to speed up your experience.")
 	dlg.show()
-	apiKey = getAPIKey()
-	autoLoad = SimpleJSONParser(registry.read("autoLoad"))
+	autoLoad = rdJSONParser(registry.read("autoLoad"))
 	
 '	*** Load data and save into text files based on account autoload settings ***
 
-	if autoLoad.calendar then WriteASCIIFile("tmp:/calendar.txt", aSyncFetch("http://api.trakt.tv/user/calendar/shows.json/" + apiKey + "/" + username + "/20120102/" + registry.read("calendar_days"), true))
-	
-	if autoLoad.tv then WriteASCIIFile("tmp:/tv.txt", aSyncFetch("http://api.trakt.tv/recommendations/shows/" + apiKey, true))
-	
-	if autoLoad.movies then WriteASCIIFile("tmp:/movies.txt", aSyncFetch("http://api.trakt.tv/recommendations/movies/" + apiKey))
-	
-	if autoLoad.friends then WriteASCIIFile("tmp:/friends.txt", aSyncFetch("http://api.trakt.tv/user/friends.json/" + apiKey + "/" + username + "/extended"))
-	
-	if autoLoad.trending then WriteASCIIFIle("tmp:/trending.txt", aSyncFetch("http://api.trakt.tv/activity/community.json/" + apiKey + "/movie,show/watching,scrobble,checkin/20120102", true))
+	if autoLoad.calendar then aSyncFetch("http://api.trakt.tv/user/calendar/shows.json/" + getAPIKey() + "/" + username + "/" + getDateString() + "/" + registry.read("calendar_days"), true, "tmp:/calendar.txt")
+	if autoLoad.tv then aSyncFetch("http://api.trakt.tv/recommendations/shows/" + getAPIKey(), true, "tmp:/tv.txt", 0, true)
+	if autoLoad.movies then aSyncFetch("http://api.trakt.tv/recommendations/movies/" + getAPIKey(), true, "tmp:/movies.txt")
+	if autoLoad.friends then aSyncFetch("http://api.trakt.tv/user/friends.json/" + getAPIKey() + "/" + username + "/extended", true, "tmp:/friends.txt")
+	if autoLoad.trending then aSyncFetch("http://api.trakt.tv/activity/community.json/" + getAPIKey() + "/movie,show/watching,scrobble,checkin/20120102", true, "tmp:/trending.txt")
 	
 	dlg.close()
+
     while true
         msg = wait(0, screen.getmessageport())
         idx = msg.getIndex()
@@ -160,18 +160,6 @@ Function displayBase64()
     print result2
 End Function
 
-'**********************************************************
-'** When a poster on the home screen is selected, we call
-'** this function passing an roAssociativeArray with the 
-'** ContentMetaData for the selected show.  This data should 
-'** be sufficient for the springboard to display
-'**********************************************************
-Function displayShowDetailScreen(category as Object, showIndex as Integer) As Integer
-
-    'add code to create springboard, for now we do nothing
-    return 1
-
-End Function
 
 '**********************************************************
 '** Define the categories for the Trakt app main screen.

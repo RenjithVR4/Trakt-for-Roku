@@ -4,7 +4,7 @@ Function runAccount()
 	accountScreen = CreateObject("roSpringboardScreen")
 	accountScreen.setDescriptionStyle("generic")
 
-	registry = createObject("roRegistrySection", "account")
+	registry = getRegistry("account")
 	if registry.exists("username") then
 		unlink = true
 		accountScreen.addButton(0, "Unlink Trakt Account")
@@ -32,12 +32,12 @@ Function runAccount()
          return -1
         else if msg.isButtonPressed() then
         	if idx = 0 then
-        		if unlink = true then
+        		if unlink then
         			dlg = CreateObject("roMessageDialog")
-					dlg.setTitle("Account is already linked")
-					dlg.setText("Are you sure you wish to unlink the current trakt account?")
-					dlg.addButton(0, "Unlink Existing Account")
-					dlg.addButton(2, "Replace existing account with new account")
+					dlg.setTitle("Register a different account?")
+					dlg.setText("An account must be linked at all times to use this application.  If you choose to link a new account later, the app will close and ask for new credentials during startup.")
+					dlg.addButton(0, "Unlink Existing Account and quit.")
+					dlg.addButton(2, "Replace existing account with different account")
 					dlg.addButton(1, "Cancel")
 					dlg.setFocusedMenuItem(1)
 					dlg.setMessagePort(CreateObject("roMessagePort"))
@@ -54,8 +54,8 @@ Function runAccount()
 									accountScreen.addButton(2, "Manage Trending Stream")
 									accountScreen.addButton(3, "Calendar Settings")
 									accountScreen.allowUpdates(true)
-
 									unlink = true
+								
 								endif
 								dlg.close()
 								
@@ -66,14 +66,7 @@ Function runAccount()
 								registry.delete("password")
 								registry.delete("fullname")
 								registry.flush()
-								accountScreen.allowUpdates(false)
-								accountScreen.clearButtons()
-								accountScreen.addButton(0, "Link Trakt Account")
-								accountScreen.addButton(1, "Set up Trakt Syncing")
-								accountScreen.addButton(2, "Manage Trending Stream")
-								accountScreen.addButton(3, "Calendar Settings")
-								accountScreen.allowUpdates(true)
-								unlink = false
+								END
 							dlg.close()
 						endif
 					endif
@@ -106,7 +99,7 @@ Function runAccount()
 end function
 
 function linkAccount() as Integer
-	registry = CreateObject("roRegistrySection", "account")
+	registry = getRegistry("account")
 
 	restartAuth:
 	kbd = CreateObject("roKeyboardScreen")
@@ -124,7 +117,6 @@ function linkAccount() as Integer
 				username = kbd.getText()
 				print "username accepted as" + username
 
-				'kbd.close()
 				exit while
 			else if idx = 1 then
 				kbd.close()
@@ -290,8 +282,9 @@ function linkAccount() as Integer
 				exit while
 			endif
 		end while
-
+		return 1
 	endif
+	return -1
 end function
 
 function syncSetup(trace = false) as void

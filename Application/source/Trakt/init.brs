@@ -1,13 +1,7 @@
-Function init()  as Integer
-init:
-	initTheme()
-	screen=preShowPosterScreen("", "")
-    	if screen=invalid then
-        	print "unexpected error in preShowPosterScreen"
-        	return -1
-    	end if
+function checkAccountLink() as void
+	registry = getRegistry("account")
 	
-	registry = CreateObject("roRegistrySection", "account")
+	
 	if  not registry.exists("username") then 
 		dlg = CreateObject("roMessageDialog")
 		dlg.setTitle("Link account before using the app.")
@@ -19,17 +13,27 @@ init:
 			msg = wait(0, dlg.getMessagePort())
 			if msg.isButtonPressed() then
 				if linkAccount() = 1 then
-					showPosterScreen(screen)
-					return 0
+					exit while
 				else
 					END
-					return -1
 				endif
 			endif
 		end while
 	endif
+end function
+
+Function init()  as Integer
+init:
+	initTheme()
+	
+	screen=preShowPosterScreen("", "")
+    	if screen=invalid then
+        	print "unexpected error in preShowPosterScreen"
+        	return -1
+    	end if
 	
 	showPosterScreen(screen)
+	
 	return 0
 	
 end function
@@ -62,7 +66,7 @@ function aSyncGetCalendar(t as String) as Integer
     num_retries%     = 5
     str = ""
     while num_retries% > 0
-    	if (urlT.AsyncPostFromString(SimpleJSONBuilder(JSONArray)))
+    	if (urlT.AsyncPostFromString(simpleJSONBuilder(JSONArray)))
             event = wait(timeout%, urlT.GetPort())
             if type(event) = "roUrlEvent"
                  respCode = event.GetResponseCode()
@@ -122,7 +126,7 @@ function aSyncGetTVRecommendations() as Integer
 	    num_retries%     = 5
 	    str = ""
 	    while num_retries% > 0
-	        if (urlT.AsyncPostFromString(SimpleJSONBuilder(JSONArray)))
+	        if (urlT.AsyncPostFromString(simpleJSONBuilder(JSONArray)))
 	            event = wait(timeout%, urlT.GetPort())
 	            if type(event) = "roUrlEvent"
 	                 respCode = event.GetResponseCode()
@@ -176,7 +180,7 @@ function aSyncGetMovieRecommendations() as Integer
 	    num_retries%     = 5
 	    str = ""
 	    while num_retries% > 0
-	        if (urlT.AsyncPostFromString(SimpleJSONBuilder(JSONArray)))
+	        if (urlT.AsyncPostFromString(simpleJSONBuilder(JSONArray)))
 	            event = wait(timeout%, urlT.GetPort())
 	            if type(event) = "roUrlEvent"
 	                 respCode = event.GetResponseCode()
@@ -233,7 +237,7 @@ function aSyncGetFriends() as Integer
 	    num_retries%     = 5
 	    str = ""
 	    while num_retries% > 0
-	        if (urlT.AsyncPostFromString(SimpleJSONBuilder(JSONArray)))
+	        if (urlT.AsyncPostFromString(simpleJSONBuilder(JSONArray)))
 	            event = wait(timeout%, urlT.GetPort())
 	            if type(event) = "roUrlEvent"
 	                 respCode = event.GetResponseCode()
@@ -290,7 +294,7 @@ function aSyncGetTrendingMovies() as Integer
 	    num_retries%     = 5
 	    str = ""
 	    while num_retries% > 0
-	        if (urlT.AsyncPostFromString(SimpleJSONBuilder(JSONArray)))
+	        if (urlT.AsyncPostFromString(simpleJSONBuilder(JSONArray)))
 	            event = wait(timeout%, urlT.GetPort())
 	            if type(event) = "roUrlEvent"
 	                 respCode = event.GetResponseCode()
@@ -347,7 +351,7 @@ function aSyncGetTrendingShows() as Integer
 	    num_retries%     = 5
 	    str = ""
 	    while num_retries% > 0
-	        if (urlT.AsyncPostFromString(SimpleJSONBuilder(JSONArray)))
+	        if (urlT.AsyncPostFromString(simpleJSONBuilder(JSONArray)))
 	            event = wait(timeout%, urlT.GetPort())
 	            if type(event) = "roUrlEvent"
 	                 respCode = event.GetResponseCode()
@@ -385,15 +389,5 @@ function aSyncGetTrendingShows() as Integer
 	return 0
 end function
 
-function mod(a as Integer, b as Integer) as Integer
-	if (b-a) > a then
-		return mod(a, (b-a))
-	endif
-	if (b-a) < 0 then
-		return (a-b)+1
-	else if (b-a) < 0 then
-		return abs((b-a)-1)
-	else
-		return 0
-	endif
-end function
+
+
