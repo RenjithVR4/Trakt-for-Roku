@@ -1,5 +1,30 @@
 Trakt Appication for Roku Streaming Players
 
+01/16/2011:  Alpha Version Available
+
+After a lot of hard work I am publishing the alpha version of the Trakt.tv app for roku for testing across all Roku devices (HD only at this time).  To add the private alpha channel to your roku, just visit: http://owner.roku.com/add/UV4YB and click add.  Please, please send feedback, bugs, feature suggestions, or pats on the back to greenpizza13@gmail.com, or PM me on github.  You can follow me @fundAbtraction on Twitter.
+
+Thanks for testing.
+
+Aaron Smith
+
+------------------------------
+
+Trakt.tv For Roku Players!
+
+Features:
+	View your calendar up to a month in advance, with full poster art and quick access to show descriptions.
+	View your t.v. and movie recommendations easily from your couch, and add items to lists or your watchlist.
+	View and edit your watchlist, lists, and collections easily.
+	View t.v. show and movie pages with beautiful high definition fanart background, episode or movie information, and overviews.
+	Rate any item in the app with the click of a button.
+	Search Trakt.tv's massive database of shows, movies, and episodes without getting up.
+	
+Future Releases:
+	This release is alpha for testing only, and should not be taken as the final product.  I will be implementing beautiful icon sets, ability to remove from lists, bug fixes, much more customization, account creation from in app, and much more.
+
+Enjoy!-----------------------
+ 
 The first version of this application will serve as a hub for Trakt.tv users, allowing access to their Calendar, Recommendations, T.V. and Movie watchlists, and tending shows and movies.  Initially the app will simple serve as a Trakt.tv browser designed for the Roku.  As Roku, Inc. adds functionality, this app may be used to scrobble watched media on the Roku in the background and update Trakt accordingly.
 
 For more information on the development of this app, or to propose features, contact me on github or via email at greenpizza13@gmail.com.
