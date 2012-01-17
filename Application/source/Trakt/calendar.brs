@@ -2,42 +2,13 @@
 function runCalendar(trace = false) as Integer
 	if trace then print "Running calendar screen."
 	
-'	*** Try and load the file in the tmp:/ directory
-	premieres = ReadASCIIFile("tmp:/calendar.txt")
-	if premieres = "failed" then goto reload
-	if type(premieres) = invalid then goto reload
-	if premieres = "" then goto reload
-	
-	goto display
-
-'	*** If the file is not found or is invalid, try to create it again.
-reload:
-
-	dlg = createSimpleLoadingScreen("Loading Content", "Calendar data will take longer to load if there are many items in your watchlist.")
-	dlg.show()
-	
 	registry = getRegistry("account")
-	premieres = aSyncFetch("http://api.trakt.tv/user/calendar/shows.json/" + getAPIKey() + "/" + registry.read("username") + "/" + getDateString() + "/" + registry.read("calendar_days"), true)
-	dlg.close()
-	
-	if premieres = "failed" then 
-		dlg = createObject("roMessageDialog")
-		dlg.setTitle("Could not load calendar data")
-		dlg.setText("Please try again.  If the problem persists, try unlinking and re-linking your account.")
-		dlg.addButton(0, "Ok :(")
-		dlg.setMessagePort(createObject("roMessagePort"))
-		dlg.show()
-		
-		while true
-			msg = wait(0, dlg.getMessagePort())
-			if msg.isButtonPressed then 
-				dlg.close()
-				return -1
-			endif
-		end while
-	end if
-	
-	WriteASCIIFile("tmp:/calendar.txt", premieres) 'Save the file for future use.
+
+	if checkForContentAndReload("tmp:/calendar.txt", "http://api.trakt.tv/user/calendar/shows.json/" + getAPIKey() + "/" + registry.read("username") + "/" + getDateString() + "/" + registry.read("calendar_days")) then
+		premieres = ReadASCIIFile("tmp:/calendar.txt")
+	else
+		return -1
+	endif
 	
 display:
 	dlg = CreateObject("roOneLineDialog")
@@ -59,60 +30,10 @@ display:
 			episode = premieresArray[i].episodes[j].episode
 			curMeta = CreateObject("roAssociativeArray")
 			
+			curMeta.in_watchlist = episode.in_watchlist
+			curMeta.show = show
+			curMeta.episode = episode
 			
-			'	*** Data from Trakt API:
-			'		watched
-			'		userRating
-			'		inWatchlist
-			'		show
-			'		year
-			'		firstAired
-			'		country
-			'		runtime
-			'		network
-			'		airday
-			'		airtime
-			'		certification
-			'		imdb
-			'		 poster
-			'		fanart
-			'		banner
-			'		season
-			'		pisodeNumber
-			'		episodeTitle
-			'		episodeFirstAired
-			'		episodeScreen
-			
-			curMeta.watched = episode.watched
-			'curMeta.userRating = premieresArray[i].episodes[i].rating
-			curMeta.inWatchlist = show.in_watchlist
-			curMeta.show = show.title
-			curMeta.year = show.year
-			curMeta.firstAired = show.firstAired
-			curMeta.country = show.country
-			curMeta.runtime = show.runtime
-			curMeta.network = show.network
-			curMeta.airDay = show.air_day
-			curMeta.airTime = show.air_time
-			curMeta.certification = show.certification
-			curMeta.imdb = show.imdb_id
-			curMeta.poster = show.images.poster
-			curMeta.fanart = show.images.fanart
-			curMeta.banner = show.images.banner
-			curMeta.season = episode.season
-			curMeta.episodeNumber = episode.number
-			curMeta.episodeTitle = episode.title
-			curMeta.episodeFirstAired = episode.firstAired
-			curMeta.episodeScreen = episode.images.screen
-
-			'	***	Data stored for Roku:
-			'		contentType
-			'		title
-			'		titleSeason
-			'		overview
-			'		HDPosterURL
-			'		SHPosterURL
-			'		episodeNumber
 			
 			curMeta.contentType = "episode"
 			curMeta.title = episode.title
@@ -122,8 +43,8 @@ display:
 			else
 				curMeta.description = episode.overview
 			endif
-			curMeta.HDPosterURL = show.images.poster
-			curMeta.SHPosterURL = show.images.poster
+			curMeta.HDPosterURL = parsePosterImage(show.images.poster, "138")
+			curMeta.SHPosterURL = parsePosterImage(show.images.poster, "138")
 			
 			'	*** Data stored for application:
 			'		breakCrumbLeft, right
@@ -150,8 +71,9 @@ display:
 	calendarScreen.setListNames(dateLabels)
 	calendarScreen.setDescriptionVisible(true)
 	
-	dlg.close()
 	calendarScreen.show()
+	dlg.close()
+	
 	m.port = CreateObject("roMessagePort") 'Grid screen must use a separate message port variable
 	calendarScreen.setMessagePort(m.port)
 
@@ -163,6 +85,7 @@ display:
 	
 	calendarScreen.setUpBehaviorAtTopRow("stop")
 	calendarScreen.setDescriptionVisible(true)
+	calendarScreen.setBreadCrumbText("trakt.tv", "Calendar")
 	calendarScreen.setGridStyle("flat-portrait")
 	calendarScreen.setDisplayMode("scale-to-fill")
 	calendarScreen.show()
@@ -176,40 +99,13 @@ display:
 			if msg.isScreenClosed() then
 				return -1
 			elseif msg.isListItemFocused()
-				pURL.aSyncCancel()
-				selectedRow = dates[msg.getIndex()]
-				selectedCol = selectedRow[msg.getData()]
-				pURL.setURL(selectedCol.fanart)
-				print "Fetching fanart at " + selectedCol.fanart
-				fanart = pURL.aSyncGetToFile("tmp:/fanart/current.jpg")
-				'print "Focused: " + msg.getContent()
+				'Do Nothing
 			elseif msg.isListItemSelected()
-			
 				selectedRow = dates[msg.getIndex()]
 				selectedCol = selectedRow[msg.getData()]
 				selectedCol.date = dateLabels[msg.getIndex()]
-				hold = wait(300, m.port)
-					if type(hold) = "roGridScreenEvent" then 
-						showQuickPopup(selectedCol)
-					else
-						if type(selectedRow[msg.getData()-1]) = invalid then
-							selectedCol.left = false
-						else
-							selectedCol.left = selectedRow[msg.getData()-1]
-						endif
-
-						if type(selectedRow[msg.getData()+1]) = invalid then 
-							selectedCol.right = false
-						else
-							selectedCol.right = selectedRow[msg.getData()+1]
-						endif
-
-						'Sends the curMeta containing all the show and episode information to the showInformation function.
-						episodeInformation(selectedCol)
-					endif
+				episodeInformation(selectedCol)
 					
-				
-				
 			endif
 		endif
 	end while

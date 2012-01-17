@@ -1,5 +1,5 @@
 'Account management functions
-Function runAccount()
+Function runAccount() as Integer
 	port = CreateObject("roMessagePort")
 	accountScreen = CreateObject("roSpringboardScreen")
 	accountScreen.setDescriptionStyle("generic")
@@ -29,7 +29,7 @@ Function runAccount()
         msg = wait(0, accountScreen.getmessageport())
         idx = msg.getIndex()
         if msg.isScreenClosed() then
-         return -1
+         return 0
         else if msg.isButtonPressed() then
         	if idx = 0 then
         		if unlink then
@@ -109,7 +109,7 @@ function linkAccount() as Integer
 	kbd.addButton(0, "Next...")
 	kbd.addButton(1, "Cancel")
 	kbd.show()
-	while true
+	while true 
 		msg = wait(0, kbd.getMessagePort())
 		idx = msg.getIndex()
 		if msg.isButtonpressed() then
@@ -250,9 +250,16 @@ function linkAccount() as Integer
 		registry.write("username", username)
 		registry.write("password", password)
 		url = "http://api.trakt.tv/user/profile.json/" + getAPIKey() + "/" + username
-		accountInfo = get(url, false)
+		accountInfo = aSyncFetch(url)
+
+		if accountInfo <> "failed" then accountInfo = rdJSONParser(accountInfo)
+
 		if type(accountInfo) = "roAssociativeArray" then
-			registry.write("fullname", accountInfo.full_name)
+			if accountInfo.fullName = "invalid" OR type(accountInfo.fullName) = "invalid" OR accountInfo.fullName = "" then
+				registry.write("fullname", username)
+			else
+				registry.write("fullname", accountInfo.full_name)
+			endif
 		endif
 		registry.write("calendar_days", "03")
 		
@@ -267,6 +274,7 @@ function linkAccount() as Integer
 		
 		
 		registry.flush()
+
 		dlg = CreateObject("roMessageDialog")
 		dlg.setTitle("Sucess!")
 		dlg.setText("Your Trakt.tv account has been successfully linked to this Roku Player.  Enjoy!")
@@ -287,7 +295,7 @@ function linkAccount() as Integer
 	return -1
 end function
 
-function syncSetup(trace = false) as void
+function syncSetup(trace = false) as Integer
 	reg = createObject("roRegistrySection", "account")
 	autoLoad = SimpleJSONParser(reg.read("autoLoad"))
 	if trace then print "Trace: autoLoad: " + autoload
@@ -395,8 +403,11 @@ create:
 				reg.write("autoLoad", SimpleJSONBuilder(autoLoad))
 				reg.flush()
 				syncScreen.close()
-				return 
+				return 0
 			endif
+		else if (msg.isScreenClosed()) then
+			return 0
+		
 		end if
 	end while
 end function
@@ -441,7 +452,11 @@ function calendarSetup(trace = false) as boolean
 				exit while
 	
 			endif
-		endif
+		
+
+		else if msg.isScreenClosed() then
+			return true
+		end if
 	end while
 	
 	registry.write("calendar_days", days)

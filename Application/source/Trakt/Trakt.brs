@@ -21,7 +21,6 @@ End Sub
 '*************************************************************
 
 Sub initTheme()
-
     app = CreateObject("roAppManager")
     theme = CreateObject("roAssociativeArray")
 
@@ -90,10 +89,12 @@ Function showPosterScreen(screen As Object) As Integer
 	endif
 	
 	username = registry.read("username")
-	screen.SetTitle("trakt")
-    screen.SetContentList(getMainScreenCategories())
-    screen.SetBreadcrumbText("trakt.tv", breadcrumbUser)
+	categories = getMainScreenCategories()
 	
+	screen.SetTitle("trakt")
+    screen.SetContentList(categories[0])
+    screen.SetBreadcrumbText("trakt.tv", breadcrumbUser)
+	screen.setListNames(mainScreenlists())
     screen.Show()
 
 	
@@ -113,35 +114,47 @@ Function showPosterScreen(screen As Object) As Integer
 
     while true
         msg = wait(0, screen.getmessageport())
-        idx = msg.getIndex()
-        if msg.isListItemSelected() then
-        	if idx = 0 then
-        		runCalendar()
-        	
-        	else if idx = 1 then
-        		runTVRecommendations()
-        	
-        	else if idx = 2 then 
-        		runMovieRecommendations()
-        	
-        	else if idx = 3 then
-        		runTrending()
-        	
-        	else if idx = 4 then
-        		runFriends()
-        	
-        	else if idx = 5 then
-        		runAccount()
-        		print "Updating breadcrumbs"
-        		breadcrumbUser = "Not Logged In"
-				if registry.exists("fullname") then
-					breadcrumbUser = registry.read("fullname")
-				endif
-				print "New user: " + breadcrumbUser
-			    screen.SetBreadcrumbText("trakt.tv", breadcrumbUser)
-
+		if type(msg) = "roPosterScreenEvent" then 
+			
+			 if msg.isListSelected() then
+		
+					screen.setContentList(categories[msg.getIndex()])
+					screen.setFocusedListItem(0)
+        		else if msg.isListItemSelected() then
+        			currentList = screen.getContentList()
+					command = currentList[msg.getIndex()].function
+					if command = "runCalendar" then
+						runCalendar()
+					else if command = "runTVRecommendations" 
+						runTVRecommendations()
+					else if command = "runMovieRecommendations"
+						runMovieRecommendations()
+					else if command = "runWatchlist"
+						runWatchlist()
+					else if command = "runMovieCollection"
+						runMovieCollection()
+					else if command = "runTVCollection"
+						runTVCollection()
+					else if command = "runLists"
+						runLists()
+					else if command = "runTrending"
+						runTrending()
+					else if command = "runAllActivity"
+						runAllActivity()
+					else if command = "runFriends"
+						runFriends()
+					else if command = "runAccount"
+						runAccount()
+					else if command = "searchMovies"
+						searchMovies()
+					else if command = "searchShows"
+						searchShows()
+					else if command = "searchEpisodes"
+						searchEpisodes()
+					endif
+						
         	endif
-        endif
+		endif
     end while
 
 
@@ -168,22 +181,115 @@ End Function
 '**********************************************************
 Function getMainScreenCategories() As Object
 	print "Running getMainScreenCategories()"
-	categories = CreateObject("roArray", 6, true)
-	for i=0 to 5
-		categories[i] = CreateObject("roAssociativeArray")
-	end for
-	categories[0].ShortDescriptionLine1 = "Calendar"
-	categories[0].ShortDescriptionLine2 = "View upcoming T.V. shows and movies"
-	categories[0].hdposterurl = "pkg:/images/screens/home/calendar_hd.png"
-	categories[1].ShortDescriptionLine1 = "T.V. Recommendations"
-	categories[1].ShortDescriptionLine2 = "Recommendations based on your favorite shows"
-	categories[2].ShortDescriptionLine1 = "Movie Recommendations"
-	categories[2].ShortDescriptionLine2 = "Recommendations based on your favorite movies"
-	categories[3].ShortDescriptionLine1 = "Trending"
-	categories[3].ShortDescriptionLine2 = "What the trakt community is watching now"
-	categories[4].ShortDescriptionLine1 = "Friends"
-	categories[4].ShortDescriptionLine2 = "What your friends are watching"
-	categories[5].ShortDescriptionLine1 = "Account"
-	categories[5].ShortDescriptionLine2 = "Trakt.tv syncing and account link"
+	categories = CreateObject("roArray", 4, true)
+	
+	whatson = [
+		{
+			ShortDescriptionLine1 : "Calendar"
+			ShortDescriptionLine2 : "View upcoming shows in your watchlist."
+			hdposterurl : "pkg:/images/screens/home/calendar_hd.png"
+			function: "runCalendar"
+		}
+		{
+			ShortDescriptionLine1 : "T.V. Recommendations"
+			ShortDescriptionLine2 : "Recommendations based on your favorite shows"
+			hdposterurl : "pkg:/images/screens/home/tv_recs_hd.png"
+			function: "runTVRecommendations"
+			
+		}
+		{
+			ShortDescriptionLine1 : "Movie Recommendations"
+			ShortDescriptionLine2 : "Recommendations based on your favorite movies"
+			hdposterurl : "pkg:/images/screens/home/movies_recs_hd.png"
+
+			function: "runMovieRecommendations"
+			
+		}
+	]
+		
+	mycollection = [	
+		{
+			ShortDescriptionLine1 : "Watchlist"
+			ShortDescriptionLine2 : "View and edit shows and movies in your watchlist"
+			function: "runWatchlist"
+			
+		}
+		{
+			ShortDescriptionLine1 : "My Movie Collection"
+			ShortDescriptionLine2 : "All of the movies you own."
+			function: "runMovieCollection"
+			
+		}
+		{
+			ShortDescriptionLine1 : "My T.V. Show Collection"
+			ShortDescriptionLine2 : "All of the shows you own."
+			function: "runTVCollection"
+			
+		}
+		{
+			ShortDescriptionLine1 : "My Lists"
+			ShortDescriptionLine2 : "View and edit your lists"
+			function: "runLists"
+			
+		}
+	]
+	'activity = 	[
+	''	{
+	''		ShortDescriptionLine1 : "What's Trending?"
+	''		ShortDescriptionLine2 : "Trending movies and t.v. shows"
+	''		function: "runTrending"
+	''		
+	''	}
+	''	{
+	''		ShortDescriptionLine1 : "The trakt.tv community"
+	''		ShortDescriptionLine2 : "All trakt activity"
+	''		function: "runAllActivity"
+	''		
+	''	}
+	''	{
+	''		ShortDescriptionLine1 : "Friends"
+	''		ShortDescriptionLine2 : "What your friends are up to "
+	''		function: "runFriends"
+	''		
+	''	}
+	'']
+	search = [
+		{
+			ShortDescriptionLine1 : "Movies"
+			function : "searchMovies"
+		}
+		{
+			ShortDescriptionLine1 : "Shows"
+			function : "searchShows"
+		}
+		{
+			ShortDescriptionLine1 : "Episodes"
+			function : "searchEpisodes"
+		}
+	]
+	account = [
+		{
+			ShortDescriptionLine1 : "Application Settings"
+			ShortDescriptionLine2 : "Manage the way this app works"
+			function: "runAccount"
+			
+		}
+		]
+
+	categories.push(whatson)
+	categories.push(mycollection)
+	'categories.push(activity)
+	categories.push(search)
+	categories.push(account)
 	return categories
+	
+	
+end function
+
+function mainScreenLists() as Object
+	categoryList = createObject("roArray", 4, true)
+	'categoryList = ["What's On?", "My Collection", "Trakt Activity", "My Account"]
+	categoryList = ["What's On?", "My Collection", "Search",  "My Account"]
+
+	return categoryList
 end function
